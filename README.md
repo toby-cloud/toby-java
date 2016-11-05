@@ -1,5 +1,4 @@
-# toby-java
-A java library for communicating with your Toby bots.
+[![Build Status](https://travis-ci.org/toby-cloud/toby-java.svg?branch=master)](https://travis-ci.org/toby-cloud/toby-java)
 
 
 ## Install gradle
