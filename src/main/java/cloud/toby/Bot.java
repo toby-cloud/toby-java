@@ -80,6 +80,7 @@ public class Bot {
     public void start() {
 
       MQTT mqtt = new MQTT();
+      Bot bot = this;
 
       try {
           mqtt.setHost("toby.cloud", 444);
@@ -107,8 +108,12 @@ public class Bot {
                   public void run() {
                       String[] topicSplit = new String(topic.toByteArray()).split("/");
                       String from = topicSplit[2];
-                      Message message = new Message(new String(body.toByteArray()));
-                      onMessage.go(from, message);
+                      try {
+                        Message message = new Message(new String(body.toByteArray()));
+                        onMessage.go(bot, from, message);
+                      } catch (InvalidMessageException e) {
+                        System.out.println("Received malformed message.");
+                      }
                   }
               };
               t.start();
@@ -122,6 +127,7 @@ public class Bot {
           }
       });
 
+
       // Attempt connection to MQTT broker
       // If successful, subscribe to bot data
       connection.connect(new Callback<Void>() {
@@ -132,7 +138,7 @@ public class Bot {
               connection.subscribe(topics, new Callback<byte[]>() {
                   public void onSuccess(byte[] qoses) {
                       connected = true;
-                      onConnect.go();
+                      onConnect.go(bot);
                   }
                   public void onFailure(Throwable value) {
                       connection.disconnect(null); //subscribe failed
@@ -163,6 +169,16 @@ public class Bot {
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#send requires MQTT connection");
       }
+
+      this.connection.publish("server/" + botId + "/send", message.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+          public void onSuccess(Void v) {
+            // the pubish operation completed successfully
+          }
+          public void onFailure(Throwable value) {
+              connection.disconnect(null); // publish failed.
+              connected = false;
+          }
+      });
     }
 
     /**

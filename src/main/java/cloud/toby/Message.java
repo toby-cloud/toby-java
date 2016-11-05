@@ -25,7 +25,13 @@ public class Message {
    * @param  String ackTag
    * @param  List<String> tags
    */
-  public Message(String message, String messageType, String ackTag, List<String> tags) {
+  public Message(String message, String messageType, String ackTag, List<String> tags) throws InvalidMessageException {
+    if (message == null || messageType == null)
+      throw new InvalidMessageException("message and messageType required");
+
+    if (tags == null)
+      tags = Arrays.asList();
+
     this.message = message;
     this.messageType = messageType;
     this.ackTag = ackTag;
@@ -38,11 +44,8 @@ public class Message {
    * @param  String messageType
    * @param  List<String> tags
    */
-  public Message(String message, String messageType, List<String> tags) {
-    this.message = message;
-    this.messageType = messageType;
-    this.ackTag = "";
-    this.tags = tags;
+  public Message(String message, String messageType, List<String> tags) throws InvalidMessageException {
+    this(message, messageType, null, tags);
   }
 
 
@@ -51,13 +54,19 @@ public class Message {
    *
    * @param String messageString the JSON string representing the message
    */
-  public Message(String messageString) {
+  public Message(String messageString) throws InvalidMessageException {
     Gson gson = new Gson();
     Message m = gson.fromJson(messageString, Message.class);
+    if (m.getMessage() == null || m.getMessageType() == null)
+      throw new InvalidMessageException("message and messageType required");
+
     this.message = m.getMessage();
     this.messageType = m.getMessageType();
     this.ackTag = m.getAckTag();
     this.tags = m.getTags();
+
+    if (this.tags == null)
+      this.tags = Arrays.asList();
   }
 
   public String getMessage() {

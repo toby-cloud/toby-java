@@ -1,42 +1,93 @@
 
 package cloud.toby;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
 import java.util.Arrays;
+
+import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for Bot class.
  */
-public class BotTest extends TestCase {
+public class BotTest {
 
     private Bot testBot;
+    private Message testMessage;
 
     /**
-     * Create the test case
+     * Test Case constructor - instantiates an example bot and message
      *
-     * @param testName name of the test case
      */
-    public BotTest(String testName) {
-        super(testName);
+    public BotTest() {
+      OnConnectCallback onConnect = new OnConnect();
+      OnDisconnectCallback onDisconnect = new OnDisconnect();
+      OnMessageCallback onMessage = new OnMessage();
+
+      this.testBot = new Bot("exampleId", "exampleSk", onConnect, onDisconnect, onMessage);
+      try {
+        this.testMessage = new Message("message", "TEXT", "ack", Arrays.asList("tag1", "tag2"));;
+      } catch (InvalidMessageException e) {
+        e.printStackTrace();
+      }
     }
 
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite( BotTest.class );
-    }
 
-
+    @Test
     public void testConstructor() {
-        OnConnectCallback onConnect = new OnConnect();
-        OnDisconnectCallback onDisconnect = new OnDisconnect();
-        OnMessageCallback onMessage = new OnMessage();
-
-        this.testBot = new Bot("exampleId", "exampleSk", onConnect, onDisconnect, onMessage);
+        assertNotNull(this.testMessage);
+        assertNotNull(this.testBot);
         assertFalse(this.testBot.isConnected());
+    }
+
+    // Test Not Connected Exceptions
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedSend() throws NotConnectedException {
+      this.testBot.send(this.testMessage);
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedFollow() throws NotConnectedException {
+      this.testBot.follow(Arrays.asList(), "ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedUnfollow() throws NotConnectedException {
+      this.testBot.unfollow(Arrays.asList(), "ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedInfo() throws NotConnectedException {
+      this.testBot.info("ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedCreateBot() throws NotConnectedException {
+      this.testBot.createBot("username", "password", "ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedCreateSocket() throws NotConnectedException {
+      this.testBot.createSocket(false, "ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedRemoveBot() throws NotConnectedException {
+      this.testBot.removeBot("id", "ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedRemoveSocket() throws NotConnectedException {
+      this.testBot.removeSocket("id", "ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedTurnHooksOn() throws NotConnectedException {
+      this.testBot.turnHooksOn("password", "ack");
+    }
+    @Test(expected = NotConnectedException.class)
+    public void testNotConnectedTurnHooksOff() throws NotConnectedException {
+      this.testBot.turnHooksOff("ack");
     }
 
 

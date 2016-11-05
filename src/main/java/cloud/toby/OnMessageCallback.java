@@ -2,5 +2,5 @@
 package cloud.toby;
 
 interface OnMessageCallback {
-    void go(String from, Message message);
+    void go(Bot bot, String from, Message message);
 }

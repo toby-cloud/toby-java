@@ -5,7 +5,9 @@ A java library for communicating with your Toby bots.
 ## Install gradle
 
 `curl -s https://get.sdkman.io | bash`
+
 Open new terminal
+
 `sdk install gradle 3.1`
 
 

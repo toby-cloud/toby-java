@@ -1,74 +1,161 @@
 
 package cloud.toby;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
+import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.Arrays;
 
 /**
  * Unit test for Message class.
  */
-public class MessageTest extends TestCase {
+public class MessageTest  {
 
     /**
      * Create the test case
-     *
-     * @param testName name of the test case
      */
-    public MessageTest(String testName) {
-        super(testName);
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite( MessageTest.class );
-    }
+    public MessageTest() {}
 
     /**
      * Test Message constructor with all fields
      */
+     @Test
     public void testConstructorAllFields() {
         List<String> tags = Arrays.asList("tag1", "tag2", "tag3");
-        Message m = new Message("example message", "TEXT", "exampleAck", tags);
-        assertEquals(m.getMessage(), "example message");
-        assertEquals(m.getMessageType(), "TEXT");
-        assertEquals(m.getAckTag(), "exampleAck");
-        assertEquals(m.getTags(), tags);
+        try {
+          Message m = new Message("example message", "TEXT", "exampleAck", tags);
+          assertEquals(m.getMessage(), "example message");
+          assertEquals(m.getMessageType(), "TEXT");
+          assertEquals(m.getAckTag(), "exampleAck");
+          assertEquals(m.getTags(), tags);
+        } catch (InvalidMessageException e) {
+          assertNull(e);
+        }
     }
 
     /**
      * Test Message constructor with no ackTag
      */
+     @Test
     public void testConstructorNoAckTag() {
       List<String> tags = Arrays.asList("tag4", "tag5", "tag6");
-      Message m = new Message("example message 2", "TEXT", tags);
-      assertEquals(m.getMessage(), "example message 2");
-      assertEquals(m.getMessageType(), "TEXT");
-      assertEquals(m.getAckTag(), "");
-      assertEquals(m.getTags(), tags);
+      try {
+        Message m = new Message("example message 2", "TEXT", tags);
+        assertEquals(m.getMessage(), "example message 2");
+        assertEquals(m.getMessageType(), "TEXT");
+        assertNull(m.getAckTag());
+        assertEquals(m.getTags(), tags);
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
     }
 
     /**
      * Test Message constructor using message string
      */
-    public void testConstructorMessageString() {
+     @Test
+    public void testConstructorMessageStringAllFields() {
       String messageString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[\"java\"],\"ackTag\": \"javaAck\"}";
-      Message m = new Message(messageString);
-      assertEquals(m.getMessage(), "hey");
-      assertEquals(m.getMessageType(), "TEXT");
-      assertEquals(m.getAckTag(), "javaAck");
-      assertEquals(m.getTags(), Arrays.asList("java"));
+      try {
+        Message m = new Message(messageString);
+        assertEquals(m.getMessage(), "hey");
+        assertEquals(m.getMessageType(), "TEXT");
+        assertEquals(m.getAckTag(), "javaAck");
+        assertEquals(m.getTags(), Arrays.asList("java"));
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
 
-      // TODO test more cases, i.e. without tags, without ackTag, etc.
+    }
+    @Test
+    public void testConstructorMessageStringNoAckTag() {
+      String messageString = "{\"message\":\"hello\",\"messageType\":\"TEXT\",\"tags\":[\"tag\",\"tag2\"]}";
+      try {
+        Message m = new Message(messageString);
+        assertEquals("hello", m.getMessage());
+        assertEquals("TEXT", m.getMessageType());
+        assertNull(m.getAckTag());
+        assertEquals(m.getTags(), Arrays.asList("tag", "tag2"));
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
+
+    }
+    @Test
+    public void testConstructorMessageStringEmptyTags() {
+      String messageString = "{\"message\":\"hello\",\"messageType\":\"TEXT\",\"tags\":[]}";
+      try {
+        Message m = new Message(messageString);
+        assertEquals("hello", m.getMessage());
+        assertEquals("TEXT", m.getMessageType());
+        assertNull(m.getAckTag());
+        assertEquals(m.getTags(), Arrays.asList());
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
     }
 
-    public void testToString() {
-      
+    @Test
+    public void testToStringAllFields() {
+      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"ackTag\":\"javaAck\",\"tags\":[\"java\"]}";
+      try {
+        Message m = new Message("hey", "TEXT", "javaAck", Arrays.asList("java"));
+        Message m2 = new Message(expectedString);
+        assertEquals(expectedString, m.toString());
+        assertEquals(expectedString, m2.toString());
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
     }
 
+    @Test
+    public void testToStringNoAckTag() {
+      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[\"java\"]}";
+      try {
+        Message m = new Message("hey", "TEXT", Arrays.asList("java"));
+        Message m2 = new Message(expectedString);
+        assertEquals(expectedString, m.toString());
+        assertEquals(expectedString, m2.toString());
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
+    }
+
+    @Test
+    public void testToStringEmptyTags() {
+      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[]}";
+      try {
+        Message m = new Message("hey", "TEXT", Arrays.asList());
+        Message m2 = new Message(expectedString);
+        assertEquals(expectedString, m.toString());
+        assertEquals(expectedString, m2.toString());
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
+    }
+
+    @Test
+    public void testToStringNullTags() {
+      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[]}";
+      try {
+        Message m = new Message("hey", "TEXT", null);
+        Message m2 = new Message(expectedString);
+        assertEquals(expectedString, m.toString());
+        assertEquals(expectedString, m2.toString());
+      } catch (InvalidMessageException e) {
+        assertNull(e);
+      }
+    }
+
+    // TODO test InvalidMessageException
 
 }
