@@ -8,7 +8,7 @@ import junit.framework.TestSuite;
 /**
  * Unit test for simple App.
  */
-public class AppTest
+public class BotTest
     extends TestCase
 {
     /**
@@ -16,7 +16,7 @@ public class AppTest
      *
      * @param testName name of the test case
      */
-    public AppTest( String testName )
+    public BotTest( String testName )
     {
         super( testName );
     }
@@ -26,13 +26,13 @@ public class AppTest
      */
     public static Test suite()
     {
-        return new TestSuite( AppTest.class );
+        return new TestSuite( BotTest.class );
     }
 
     /**
      * Rigourous Test :-)
      */
-    public void testApp()
+    public void testBot()
     {
         assertTrue( true );
     }
