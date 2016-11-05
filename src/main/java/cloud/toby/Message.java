@@ -18,7 +18,7 @@ public class Message {
   private List<String> tags;
 
   /**
-   * Constructor
+   * Constructor - create Message object with all fields
    *
    * @param  String message
    * @param  String messageType
@@ -32,7 +32,7 @@ public class Message {
     this.tags = tags;
   }
   /**
-   * Constructor
+   * Constructor - create Message object with no ackTag
    *
    * @param  String message
    * @param  String messageType
@@ -41,10 +41,16 @@ public class Message {
   public Message(String message, String messageType, List<String> tags) {
     this.message = message;
     this.messageType = messageType;
-    this.ackTag = ackTag;
+    this.ackTag = "";
     this.tags = tags;
   }
 
+
+  /**
+   * Constructor - create Message object from message JSON string
+   *
+   * @param String messageString the JSON string representing the message
+   */
   public Message(String messageString) {
     Gson gson = new Gson();
     Message m = gson.fromJson(messageString, Message.class);

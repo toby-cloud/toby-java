@@ -13,9 +13,8 @@ Open new terminal
 
 ```bash
 gradle tasks
-gradle assemble
 gradle build
-java -jar build/libs/toby-java2-0.1.jar
+java -jar build/libs/toby-java-0.1.jar
 ```
 
 ## Dependencies
