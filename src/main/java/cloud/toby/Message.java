@@ -56,7 +56,15 @@ public class Message {
    */
   public Message(String messageString) throws InvalidMessageException {
     Gson gson = new Gson();
-    Message m = gson.fromJson(messageString, Message.class);
+    Message m;
+    try {
+      m = gson.fromJson(messageString, Message.class);
+    } catch (Exception e) {
+      System.out.print("Invalid message:");
+      System.out.println(messageString);
+      throw new InvalidMessageException("could not parse message");
+
+    }
     if (m.getMessage() == null || m.getMessageType() == null)
       throw new InvalidMessageException("message and messageType required");
 

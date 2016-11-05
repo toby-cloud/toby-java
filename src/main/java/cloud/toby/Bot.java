@@ -254,10 +254,25 @@ public class Bot {
      *
      * @param  {type} String AckTag the tag to respond to
      */
-    public void info(String AckTag) throws NotConnectedException {
+    public void info(String ackTag) throws NotConnectedException {
+      Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#info requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+      req.put("ackTag", ackTag);
+
+      this.connection.publish("server/" + botId + "/info", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
