@@ -204,6 +204,7 @@ public class Bot {
         throw new NotConnectedException("Bot#follow requires MQTT connection");
       }
 
+      // Build request object
       JSONObject req = new JSONObject();
       JSONArray t = new JSONArray(tags);
       req.put("ackTag", ackTag);
@@ -226,9 +227,26 @@ public class Bot {
      * @param  {type} String AckTag the tag to respond to
      */
     public void unfollow(List<String> tags, String ackTag) throws NotConnectedException {
+      Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#unfollow requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+      JSONArray t = new JSONArray(tags);
+      req.put("ackTag", ackTag);
+      req.put("tags", t);
+
+      this.connection.publish("server/" + botId + "/unfollow", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
