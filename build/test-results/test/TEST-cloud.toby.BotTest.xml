@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="cloud.toby.BotTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2016-11-05T03:51:27" hostname="gg.local" time="0.001">
-  <properties/>
-  <testcase name="testBot" classname="cloud.toby.BotTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

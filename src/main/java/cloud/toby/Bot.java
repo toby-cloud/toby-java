@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.lang.String;
 import com.google.gson.Gson;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Toby Bot
@@ -34,16 +35,6 @@ public class Bot {
      * Constructor
      * @param botId
      * @param botSk
-     */
-    public Bot(String botId, String botSk) {
-        this.botId = botId;
-        this.botSk = botSk;
-    }
-
-    /**
-     * Constructor
-     * @param botId
-     * @param botSk
      * @param onConnect
      */
     public Bot(String botId, String botSk, OnConnectCallback onConnect, OnDisconnectCallback onDisconnect, OnMessageCallback onMessage) {
@@ -53,7 +44,6 @@ public class Bot {
         this.onDisconnect = onDisconnect;
         this.onMessage = onMessage;
     }
-
 
     /**
      *
@@ -82,7 +72,6 @@ public class Bot {
     public boolean isConnected() {
       return this.connected;
     }
-
 
     /**
      * Start the bot.
@@ -137,8 +126,6 @@ public class Bot {
       connection.connect(new Callback<Void>() {
           @Override
           public void onSuccess(Void value) {
-              //System.out.println("Connected to MQTT broker!");
-
               // Toby, subscribe to bot messages
               Topic[] topics = {new Topic("client/" + botId + "/#", QoS.AT_LEAST_ONCE)};
               connection.subscribe(topics, new Callback<byte[]>() {
@@ -151,7 +138,6 @@ public class Bot {
                       connected = false;
                   }
               });
-
           }
 
           @Override
@@ -165,5 +151,93 @@ public class Bot {
 
       // TODO find better way of keeping process alive
       while (true) {}
+    }
+
+    /**
+     * send - send a toby message
+     *
+     * @param  Message message the message to be sent to the server
+     */
+    public void send(Message message) {
+    }
+
+    /**
+     * follow - subscribe to tags
+     *
+     * @param  List<String> tags the list of tags to follow
+     * @param  {type} String AckTag the tag to respond to
+     */
+    public void follow(List<String> tags, String ackTag) {
+    }
+
+    /**
+     * unfollow - unsubscribe from tags
+     *
+     * @param  List<String> tags the list of tags to unfollow
+     * @param  {type} String AckTag the tag to respond to
+     */
+    public void unfollow(List<String> tags, String ackTag) {
+    }
+
+    /**
+     * info - get bot information
+     *
+     * @param  {type} String AckTag the tag to respond to
+     */
+    public void info(String AckTag) {
+    }
+
+    /**
+     * createBot - create a new bot (users only)
+     *
+     * @param  String username description
+     * @param  String password description
+     * @param  String ackTag   description
+     */
+    public void createBot(String username, String password, String ackTag) {
+    }
+
+    /**
+     * createSocket - create a new socket (bots only)
+     *
+     * @param  boolean persist if false, socket will be automatically removed on first disconnect
+     * @param  String ackTag  the tag to respond to
+     */
+    public void createSocket(boolean persist, String ackTag) {
+    }
+
+    /**
+     * removeBot - remove a bot (users only)
+     *
+     * @param  String botId  the ID of the bot to delete
+     * @param  String ackTag the tag to respond to
+     */
+    public void removeBot(String botId, String ackTag) {
+    }
+
+    /**
+     * removeSocket - remove a socket (bots only)
+     *
+     * @param  String socketId  the ID of the socket to delete
+     * @param  String ackTag the tag to respond to
+     */
+    public void removeSocket(String socketId, String ackTag) {
+    }
+
+    /**
+     * turnHooksOn - turn bot hooks on (bots only)
+     *
+     * @param  String password the hook password
+     * @param  String ackTag   the tag to respond to
+     */
+    public void turnHooksOn(String password, String ackTag) {
+    }
+
+    /**
+     * turnHooksOff - turn bot hooks off (bots only)
+     *
+     * @param  String ackTag   the tag to respond to
+     */
+    public void turnHooksOff(String ackTag) {
     }
 }
