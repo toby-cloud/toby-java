@@ -160,12 +160,23 @@ public class Bot {
       while (true) {}
     }
 
+
+    /**
+     * Disconnect from MQTT broker
+     */
+    public void end() {
+      connection.disconnect(null);
+      connected = false;
+    }
+
     /**
      * send - send a toby message
      *
      * @param  Message message the message to be sent to the server
      */
     public void send(Message message) throws NotConnectedException {
+      Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#send requires MQTT connection");
       }
@@ -175,8 +186,7 @@ public class Bot {
             // the pubish operation completed successfully
           }
           public void onFailure(Throwable value) {
-              connection.disconnect(null); // publish failed.
-              connected = false;
+            bot.end();
           }
       });
     }
@@ -188,9 +198,25 @@ public class Bot {
      * @param  {type} String AckTag the tag to respond to
      */
     public void follow(List<String> tags, String ackTag) throws NotConnectedException {
+      Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#follow requires MQTT connection");
       }
+
+      JSONObject req = new JSONObject();
+      JSONArray t = new JSONArray(tags);
+      req.put("ackTag", ackTag);
+      req.put("tags", t);
+
+      this.connection.publish("server/" + botId + "/follow", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**

@@ -18,6 +18,7 @@ public class OnConnect implements OnConnectCallback {
 
           try {
             bot.send(m);
+            bot.follow(Arrays.asList("java", "java2"), "java");
 
           } catch (NotConnectedException e) {
             System.out.println("not connected");
