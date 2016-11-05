@@ -1,0 +1,26 @@
+apply plugin: 'java'
+version = 0.1
+sourceCompatibility = 1.8
+
+repositories {
+  jcenter()
+  mavenCentral()
+}
+
+dependencies {
+   compile 'org.slf4j:slf4j-api:1.7.12'
+   compile 'org.fusesource.mqtt-client:mqtt-client:1.12'
+   compile 'org.json:json:20160212'
+   compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
+   testCompile 'junit:junit:4.12'
+}
+
+jar {
+  manifest {
+    attributes "Main-Class": "cloud.toby.App"
+  }
+
+  from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
