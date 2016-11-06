@@ -35,11 +35,10 @@ public class BotTest {
       this.testBot = new Bot("exampleId", "exampleSk", onConnect, onDisconnect, onMessage);
       try {
         this.testMessage = new Message("message", "TEXT", "ack", Arrays.asList("tag1", "tag2"));;
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         e.printStackTrace();
       }
     }
-
 
     @Test
     public void testConstructor() {

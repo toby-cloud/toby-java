@@ -1,6 +1,6 @@
 
 package cloud.toby;
 
-interface OnDisconnectCallback {
+public interface OnDisconnectCallback {
     void go();
 }

@@ -80,7 +80,7 @@ public class Bot {
     public void start() {
 
       MQTT mqtt = new MQTT();
-      Bot bot = this;
+      final Bot bot = this;
 
       try {
           mqtt.setHost("toby.cloud", 444);
@@ -91,32 +91,41 @@ public class Bot {
       mqtt.setUserName(this.botId);
       mqtt.setPassword(this.botSk);
 
+      // TODO implement connection failed timeout (currently, incorrect credentials will just hang)
+
       final CallbackConnection connection = mqtt.callbackConnection();
       connection.listener(new Listener() {
           @Override
-          public void onConnected() {}
+          public void onConnected() {} // this does nothing
 
           @Override
-          public void onDisconnected() {}
+          public void onDisconnected() {
+            System.out.println("disconnected");
+            bot.connected = false;
+            connection.disconnect(null);
+            System.exit(1); // if we don't exit, it will continue to reconnect
+          } // this does nothing
 
           @Override
-          public void onPublish(UTF8Buffer topic, Buffer body, Runnable ack) {
+          public void onPublish(UTF8Buffer t, Buffer b, Runnable ack) {
               // Called when we receive an MQTT message
+              final UTF8Buffer topic = t;
+              final Buffer body = b;
 
               // Start in new thread to avoid connection issues
-              Thread t = new Thread() {
+              Thread thread = new Thread() {
                   public void run() {
                       String[] topicSplit = new String(topic.toByteArray()).split("/");
                       String from = topicSplit[2];
                       try {
                         Message message = new Message(new String(body.toByteArray()));
                         onMessage.go(bot, from, message);
-                      } catch (InvalidMessageException e) {
-                        System.out.println("Received malformed message.");
+                      } catch (MalformedMessageException e) {
+                        onMessage.malformed(bot, new String(body.toByteArray()));
                       }
                   }
               };
-              t.start();
+              thread.start();
               ack.run();
           }
 
@@ -141,8 +150,7 @@ public class Bot {
                       onConnect.go(bot);
                   }
                   public void onFailure(Throwable value) {
-                      connection.disconnect(null); //subscribe failed
-                      connected = false;
+                    bot.end(); // subscribe failed
                   }
               });
           }
@@ -156,16 +164,25 @@ public class Bot {
 
       this.connection = connection;
 
-      // TODO find better way of keeping process alive
-      while (true) {}
+    }
+
+
+    /**
+     * Disconnect from MQTT broker
+     */
+    public void end() {
+      connection.disconnect(null);
+      connected = false;
     }
 
     /**
      * send - send a toby message
      *
-     * @param  Message message the message to be sent to the server
+     * @param  {Message} message the message to be sent to the server
      */
     public void send(Message message) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#send requires MQTT connection");
       }
@@ -175,8 +192,7 @@ public class Bot {
             // the pubish operation completed successfully
           }
           public void onFailure(Throwable value) {
-              connection.disconnect(null); // publish failed.
-              connected = false;
+            bot.end();
           }
       });
     }
@@ -184,25 +200,69 @@ public class Bot {
     /**
      * follow - subscribe to tags
      *
-     * @param  List<String> tags the list of tags to follow
+     * @param  {List<String>} tags the list of tags to follow
      * @param  {type} String AckTag the tag to respond to
      */
     public void follow(List<String> tags, String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#follow requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+      JSONArray t = new JSONArray(tags);
+        try {
+            req.put("ackTag", ackTag);
+            req.put("tags", t);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+      this.connection.publish("server/" + botId + "/follow", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
      * unfollow - unsubscribe from tags
      *
-     * @param  List<String> tags the list of tags to unfollow
-     * @param  {type} String AckTag the tag to respond to
+     * @param  {List<String>} tags the list of tags to unfollow
+     * @param  {String} AckTag the tag to respond to
      */
     public void unfollow(List<String> tags, String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#unfollow requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+      JSONArray t = new JSONArray(tags);
+        try {
+            req.put("ackTag", ackTag);
+            req.put("tags", t);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+      this.connection.publish("server/" + botId + "/unfollow", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
@@ -210,81 +270,224 @@ public class Bot {
      *
      * @param  {type} String AckTag the tag to respond to
      */
-    public void info(String AckTag) throws NotConnectedException {
+    public void info(String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#info requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+        try {
+            req.put("ackTag", ackTag);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+      this.connection.publish("server/" + botId + "/info", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
      * createBot - create a new bot (users only)
      *
-     * @param  String username description
-     * @param  String password description
-     * @param  String ackTag   description
+     * @param  {String} username description
+     * @param  {String} password description
+     * @param  {String} ackTag   description
      */
     public void createBot(String username, String password, String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#createBot requires MQTT connection");
       }
+      // Build request object
+      JSONObject req = new JSONObject();
+        try {
+            req.put("id", username);
+            req.put("secret", password);
+            req.put("ackTag", ackTag);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+      this.connection.publish("server/" + botId + "/create-bot", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
+
     }
 
     /**
      * createSocket - create a new socket (bots only)
      *
-     * @param  boolean persist if false, socket will be automatically removed on first disconnect
-     * @param  String ackTag  the tag to respond to
+     * @param  {boolean} persist if false, socket will be automatically removed on first disconnect
+     * @param  {String}ackTag  the tag to respond to
      */
     public void createSocket(boolean persist, String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#createSocket requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+        try {
+            req.put("persist", persist);
+            req.put("ackTag", ackTag);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+      this.connection.publish("server/" + botId + "/create-socket", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
      * removeBot - remove a bot (users only)
      *
-     * @param  String botId  the ID of the bot to delete
-     * @param  String ackTag the tag to respond to
+     * @param  {String}targetId  the ID of the bot to delete
+     * @param  {String}ackTag the tag to respond to
      */
-    public void removeBot(String botId, String ackTag) throws NotConnectedException {
+    public void removeBot(String targetId, String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#removeBot requires MQTT connection");
       }
+      // Build request object
+      JSONObject req = new JSONObject();
+        try {
+            req.put("targetId", targetId);
+            req.put("ackTag", ackTag);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+      this.connection.publish("server/" + botId + "/remove-bot", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
      * removeSocket - remove a socket (bots only)
      *
-     * @param  String socketId  the ID of the socket to delete
-     * @param  String ackTag the tag to respond to
+     * @param  {String} socketId  the ID of the socket to delete
+     * @param  {String} ackTag the tag to respond to
      */
-    public void removeSocket(String socketId, String ackTag) throws NotConnectedException {
+    public void removeSocket(String targetId, String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#removeSocket requires MQTT connection");
       }
+      // Build request object
+      JSONObject req = new JSONObject();
+        try {
+            req.put("targetId", targetId);
+            req.put("ackTag", ackTag);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+      this.connection.publish("server/" + botId + "/remove-socket", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
      * turnHooksOn - turn bot hooks on (bots only)
      *
-     * @param  String password the hook password
-     * @param  String ackTag   the tag to respond to
+     * @param  {String} password the hook password
+     * @param  {String} ackTag   the tag to respond to
      */
     public void turnHooksOn(String password, String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#turnHooksOn requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+        try {
+            req.put("hookSecret", password);
+            req.put("ackTag", ackTag);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+      this.connection.publish("server/" + botId + "/hooks-on", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
      * turnHooksOff - turn bot hooks off (bots only)
      *
-     * @param  String ackTag   the tag to respond to
+     * @param  {String} ackTag   the tag to respond to
      */
     public void turnHooksOff(String ackTag) throws NotConnectedException {
+      final Bot bot = this;
+
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#turnHooksOff requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+        try {
+            req.put("ackTag", ackTag);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+      this.connection.publish("server/" + botId + "/hooks-off", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
+
 }

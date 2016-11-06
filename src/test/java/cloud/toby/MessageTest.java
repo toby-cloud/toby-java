@@ -37,7 +37,7 @@ public class MessageTest  {
           assertEquals(m.getMessageType(), "TEXT");
           assertEquals(m.getAckTag(), "exampleAck");
           assertEquals(m.getTags(), tags);
-        } catch (InvalidMessageException e) {
+        } catch (MalformedMessageException e) {
           assertNull(e);
         }
     }
@@ -54,7 +54,7 @@ public class MessageTest  {
         assertEquals(m.getMessageType(), "TEXT");
         assertNull(m.getAckTag());
         assertEquals(m.getTags(), tags);
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
     }
@@ -71,7 +71,7 @@ public class MessageTest  {
         assertEquals(m.getMessageType(), "TEXT");
         assertEquals(m.getAckTag(), "javaAck");
         assertEquals(m.getTags(), Arrays.asList("java"));
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
 
@@ -85,7 +85,7 @@ public class MessageTest  {
         assertEquals("TEXT", m.getMessageType());
         assertNull(m.getAckTag());
         assertEquals(m.getTags(), Arrays.asList("tag", "tag2"));
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
 
@@ -99,7 +99,7 @@ public class MessageTest  {
         assertEquals("TEXT", m.getMessageType());
         assertNull(m.getAckTag());
         assertEquals(m.getTags(), Arrays.asList());
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
     }
@@ -112,7 +112,7 @@ public class MessageTest  {
         Message m2 = new Message(expectedString);
         assertEquals(expectedString, m.toString());
         assertEquals(expectedString, m2.toString());
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
     }
@@ -125,7 +125,7 @@ public class MessageTest  {
         Message m2 = new Message(expectedString);
         assertEquals(expectedString, m.toString());
         assertEquals(expectedString, m2.toString());
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
     }
@@ -138,7 +138,7 @@ public class MessageTest  {
         Message m2 = new Message(expectedString);
         assertEquals(expectedString, m.toString());
         assertEquals(expectedString, m2.toString());
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
     }
@@ -151,11 +151,11 @@ public class MessageTest  {
         Message m2 = new Message(expectedString);
         assertEquals(expectedString, m.toString());
         assertEquals(expectedString, m2.toString());
-      } catch (InvalidMessageException e) {
+      } catch (MalformedMessageException e) {
         assertNull(e);
       }
     }
 
-    // TODO test InvalidMessageException
+    // TODO test MalformedMessageException
 
 }

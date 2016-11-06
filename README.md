@@ -1,5 +1,16 @@
 [![Build Status](https://travis-ci.org/toby-cloud/toby-java.svg?branch=master)](https://travis-ci.org/toby-cloud/toby-java)
 
+# Installing
+
+toby-java uses Gradle. The jars *are not* yet available from a public repo, but will be soon.
+
+To compile it yourself:
+
+```bash
+git clone https://github.com/toby-cloud/toby-node
+cd toby-node
+# see usage below
+```
 
 ## Install gradle
 
@@ -14,9 +25,13 @@ Open new terminal
 
 ```bash
 gradle tasks
+gradle assemble
 gradle build
 java -jar build/libs/toby-java-0.1.jar
 ```
+Unit tests are run automatically with every build. You can also run the tests
+with the command `gradle check`.
+
 
 ## Dependencies
 
