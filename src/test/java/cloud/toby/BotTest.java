@@ -54,11 +54,11 @@ public class BotTest {
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedFollow() throws NotConnectedException {
-      this.testBot.follow(Arrays.asList(), "ack");
+      this.testBot.follow(Arrays.asList("asdf"), "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedUnfollow() throws NotConnectedException {
-      this.testBot.unfollow(Arrays.asList(), "ack");
+      this.testBot.unfollow(Arrays.asList("asdf"), "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedInfo() throws NotConnectedException {

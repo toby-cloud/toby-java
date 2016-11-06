@@ -13,6 +13,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -98,7 +99,7 @@ public class MessageTest  {
         assertEquals("hello", m.getMessage());
         assertEquals("TEXT", m.getMessageType());
         assertNull(m.getAckTag());
-        assertEquals(m.getTags(), Arrays.asList());
+        assertEquals(m.getTags(), new ArrayList<String>());
       } catch (MalformedMessageException e) {
         assertNull(e);
       }
@@ -134,7 +135,7 @@ public class MessageTest  {
     public void testToStringEmptyTags() {
       String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[]}";
       try {
-        Message m = new Message("hey", "TEXT", Arrays.asList());
+        Message m = new Message("hey", "TEXT", new ArrayList<String>());
         Message m2 = new Message(expectedString);
         assertEquals(expectedString, m.toString());
         assertEquals(expectedString, m2.toString());

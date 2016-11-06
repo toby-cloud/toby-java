@@ -47,7 +47,6 @@ public class Bot {
 
     /**
      *
-
      * @param onConnect
      */
     public void setOnConnect(OnConnectCallback onConnect) {
@@ -165,7 +164,6 @@ public class Bot {
       this.connection = connection;
 
     }
-
 
     /**
      * Disconnect from MQTT broker
