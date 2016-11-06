@@ -22,10 +22,10 @@ import java.util.regex.Pattern;
 
 
 /**
- * Example command line application to show complete Toby API functionality.
+ * Example command line application to show complete client functionality.
  *
  */
-public class App {
+class App {
 
     /**
      * Called when we establish a Toby connection
@@ -63,6 +63,9 @@ public class App {
       // TODO
       // this is an ugly, temporary fix to deal with the current server bug
       public void malformed(Bot bot, String malformed) {
+        System.out.println(String.format("\b\b\b\bMalformed message received: %s", malformed));
+        System.out.print(">>> ");
+
         JSONObject message = new JSONObject(malformed);
         JSONArray arr = new JSONArray(message.get("tags").toString());
         message = new JSONObject(message.get("message").toString());
@@ -120,6 +123,9 @@ public class App {
 
         List<String> commandSplit = new ArrayList<String>();
         Collections.addAll(commandSplit, command.split(" "));
+        String message, messageNoTags, hashtagString;
+        List<String> tags, ackTags;
+        boolean persist;
 
         try {
 
@@ -128,32 +134,95 @@ public class App {
             switch (commandSplit.get(0)) {
                 case "s":
                 case "send":
-                  String message = command.substring(commandSplit.get(0).length());
-                  String messageNoTags = removeTags(message, "#");
+                  message = command.substring(commandSplit.get(0).length());
+                  tags = extractTags(message, "#");
+                  ackTags = extractTags(message, "&");
+                  messageNoTags = removeTags(removeTags(message, "#"), "&");
                   if (messageNoTags.length() > 0)
-                    bot.send(new Message(messageNoTags, "TEXT", extractTags(message, "#")));
+                    if (ackTags.size() > 0)
+                      bot.send(new Message(messageNoTags, "TEXT", ackTags.get(0), tags));
+                    else
+                      bot.send(new Message(messageNoTags, "TEXT", tags));
+                  break;
+                case "i":
+                case "info":
+                  bot.info("i");
                   break;
                 case "c":
                 case "create":
-                  System.out.println("bot wants to create."); break;
+                  if (type.equals("user")) {
+                    if (commandSplit.size() < 3) {
+                      System.out.println("usage: (c)reate <newBotId> <newBotSk>");
+                      break;
+                    }
+                    bot.createBot(commandSplit.get(1), commandSplit.get(2), "create");
+                  }
+                  else if (type.equals("standard")) {
+                    if (commandSplit.size() < 2) {
+                      System.out.println("usage: (c)reate <persist>");
+                      break;
+                    }
+                    persist = false;
+                    if (commandSplit.get(1) == "true")
+                      persist = true;
+                    bot.createSocket(persist, "create");
+                  }
+                  else
+                    System.out.println("you will get kicked off");
+
+                  break;
                 case "r":
                 case "remove":
-                  System.out.println("bot wants to remove."); break;
+                  if (type.equals("user")) {
+                    if (commandSplit.size() < 2) {
+                      System.out.println("usage: (r)emove <botId>");
+                      break;
+                    }
+                    bot.removeBot(commandSplit.get(1), "remove");
+                  }
+                  else if (type.equals("standard")) {
+                    if (commandSplit.size() < 2) {
+                      System.out.println("usage: (r)emove <socketId>");
+                      break;
+                    }
+                    bot.removeSocket(commandSplit.get(1), "remove");
+                  }
+                  else
+                    System.out.println("you will get kicked off");
+                  break;
                 case "f":
                 case "follow":
-                  System.out.println("bot wants to follow."); break;
+                  if (commandSplit.size() < 2) {
+                    System.out.println("usage: (f)ollow <hashtagString>");
+                  }
+                  hashtagString = command.substring(commandSplit.get(0).length());
+                  bot.follow(extractTags(hashtagString, "#"), "follow");
+                  break;
                 case "u":
                 case "unfollow":
-                  System.out.println("bot wants to unfollow."); break;
-                case "n":
-                case "no":
-                  System.out.println("bot wants to turn hooks off"); break;
-                case "h":
-                case "hooks":
-                  System.out.println("bot wants to turn hooks on"); break;
+                  if (commandSplit.size() < 2) {
+                    System.out.println("usage: (u)nfollow <hashtagString>");
+                  }
+                  hashtagString = command.substring(commandSplit.get(0).length());
+                  bot.unfollow(extractTags(hashtagString, "#"), "unfollow");
+                  break;
+                case "off":
+                  bot.turnHooksOff("hook");
+                  break;
+                case "on":
+                  if (commandSplit.size() < 2) {
+                    System.out.println("usage: on <hookPassword>");
+                  }
+                  bot.turnHooksOn(commandSplit.get(1), "hook");
+                  break;
                 case "cl":
                 case "clear":
                   clear(); break;
+                case "h":
+                case "help":
+                  System.out.println("MENU:");
+                  System.out.println(commands.toString());
+                  break;
                 case "q":
                 case "quit":
                   bot.end();

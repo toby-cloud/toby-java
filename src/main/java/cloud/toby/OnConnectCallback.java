@@ -1,6 +1,6 @@
 
 package cloud.toby;
 
-interface OnConnectCallback {
+public interface OnConnectCallback {
     void go(Bot bot);
 }

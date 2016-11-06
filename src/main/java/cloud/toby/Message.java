@@ -4,7 +4,7 @@
  *
  */
 
- package cloud.toby;
+package cloud.toby;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,10 +20,10 @@ public class Message {
   /**
    * Constructor - create Message object with all fields
    *
-   * @param  String message
-   * @param  String messageType
-   * @param  String ackTag
-   * @param  List<String> tags
+   * @param  {String}  message
+   * @param  {String}  messageType
+   * @param  {String}  ackTag
+   * @param  {List<String>} tags
    */
   public Message(String message, String messageType, String ackTag, List<String> tags) throws MalformedMessageException {
     if (message == null || messageType == null)
@@ -40,9 +40,9 @@ public class Message {
   /**
    * Constructor - create Message object with no ackTag
    *
-   * @param  String message
-   * @param  String messageType
-   * @param  List<String> tags
+   * @param  {String}  message
+   * @param  {String}  messageType
+   * @param  {List<String>}  tags
    */
   public Message(String message, String messageType, List<String> tags) throws MalformedMessageException {
     this(message, messageType, null, tags);
@@ -52,7 +52,7 @@ public class Message {
   /**
    * Constructor - create Message object from message JSON string
    *
-   * @param String messageString the JSON string representing the message
+   * @param {String} messageString the JSON string representing the message
    */
   public Message(String messageString) throws MalformedMessageException {
     Gson gson = new Gson();
