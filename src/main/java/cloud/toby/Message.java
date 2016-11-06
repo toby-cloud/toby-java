@@ -25,9 +25,9 @@ public class Message {
    * @param  String ackTag
    * @param  List<String> tags
    */
-  public Message(String message, String messageType, String ackTag, List<String> tags) throws InvalidMessageException {
+  public Message(String message, String messageType, String ackTag, List<String> tags) throws MalformedMessageException {
     if (message == null || messageType == null)
-      throw new InvalidMessageException("message and messageType required");
+      throw new MalformedMessageException("message and messageType required");
 
     if (tags == null)
       tags = Arrays.asList();
@@ -44,7 +44,7 @@ public class Message {
    * @param  String messageType
    * @param  List<String> tags
    */
-  public Message(String message, String messageType, List<String> tags) throws InvalidMessageException {
+  public Message(String message, String messageType, List<String> tags) throws MalformedMessageException {
     this(message, messageType, null, tags);
   }
 
@@ -54,19 +54,16 @@ public class Message {
    *
    * @param String messageString the JSON string representing the message
    */
-  public Message(String messageString) throws InvalidMessageException {
+  public Message(String messageString) throws MalformedMessageException {
     Gson gson = new Gson();
     Message m;
     try {
       m = gson.fromJson(messageString, Message.class);
     } catch (Exception e) {
-      System.out.print("Invalid message:");
-      System.out.println(messageString);
-      throw new InvalidMessageException("could not parse message");
-
+      throw new MalformedMessageException("could not parse message");
     }
     if (m.getMessage() == null || m.getMessageType() == null)
-      throw new InvalidMessageException("message and messageType required");
+      throw new MalformedMessageException("message and messageType required");
 
     this.message = m.getMessage();
     this.messageType = m.getMessageType();

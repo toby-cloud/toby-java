@@ -91,13 +91,20 @@ public class Bot {
       mqtt.setUserName(this.botId);
       mqtt.setPassword(this.botSk);
 
+      // TODO implement connection failed timeout (currently, incorrect credentials will just hang)
+
       final CallbackConnection connection = mqtt.callbackConnection();
       connection.listener(new Listener() {
           @Override
-          public void onConnected() {}
+          public void onConnected() {} // this does nothing
 
           @Override
-          public void onDisconnected() {}
+          public void onDisconnected() {
+            System.out.println("disconnected");
+            bot.connected = false;
+            connection.disconnect(null);
+            System.exit(1); // if we don't exit, it will continue to reconnect
+          } // this does nothing
 
           @Override
           public void onPublish(UTF8Buffer topic, Buffer body, Runnable ack) {
@@ -111,8 +118,8 @@ public class Bot {
                       try {
                         Message message = new Message(new String(body.toByteArray()));
                         onMessage.go(bot, from, message);
-                      } catch (InvalidMessageException e) {
-                        System.out.println("Received malformed message.");
+                      } catch (MalformedMessageException e) {
+                        onMessage.malformed(bot, new String(body.toByteArray()));
                       }
                   }
               };
@@ -141,8 +148,7 @@ public class Bot {
                       onConnect.go(bot);
                   }
                   public void onFailure(Throwable value) {
-                      connection.disconnect(null); //subscribe failed
-                      connected = false;
+                    bot.end(); // subscribe failed
                   }
               });
           }
@@ -156,8 +162,6 @@ public class Bot {
 
       this.connection = connection;
 
-      // TODO find better way of keeping process alive
-      while (true) {}
     }
 
 
@@ -366,7 +370,7 @@ public class Bot {
      * @param  String socketId  the ID of the socket to delete
      * @param  String ackTag the tag to respond to
      */
-    public void removeSocket(String socketId, String ackTag) throws NotConnectedException {
+    public void removeSocket(String targetId, String ackTag) throws NotConnectedException {
       Bot bot = this;
 
       if (!this.isConnected()) {
@@ -399,6 +403,20 @@ public class Bot {
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#turnHooksOn requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+      req.put("hookSecret", password);
+      req.put("ackTag", ackTag);
+
+      this.connection.publish("server/" + botId + "/hooks-on", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
 
     /**
@@ -412,5 +430,19 @@ public class Bot {
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#turnHooksOff requires MQTT connection");
       }
+
+      // Build request object
+      JSONObject req = new JSONObject();
+      req.put("ackTag", ackTag);
+
+      this.connection.publish("server/" + botId + "/hooks-off", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+        public void onSuccess(Void v) {
+          // the pubish operation completed successfully
+        }
+        public void onFailure(Throwable value) {
+          bot.end();
+        }
+      });
     }
+
 }

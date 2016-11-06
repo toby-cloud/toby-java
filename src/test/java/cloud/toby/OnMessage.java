@@ -22,4 +22,8 @@ public class OnMessage implements OnMessageCallback {
           e.printStackTrace();
         }
     }
+
+    public void malformed(Bot bot, String malformed) {
+      System.out.println("Malformed message received: " + malformed);
+    }
 }
