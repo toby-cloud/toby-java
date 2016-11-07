@@ -43,6 +43,11 @@ public class MessageTest  {
         }
     }
 
+    @Test(expected = MalformedMessageException.class)
+    public void testConstructorAllFieldsMalformed() throws MalformedMessageException {
+        Message m = new Message(null, "TEXT", "exampleAck", Arrays.asList("tag"));
+    }
+
     /**
      * Test Message constructor with no ackTag
      */
@@ -103,6 +108,28 @@ public class MessageTest  {
       } catch (MalformedMessageException e) {
         assertNull(e);
       }
+    }
+    @Test
+    public void testConstructorMessageStringNullTags() {
+      String messageString = "{\"message\":\"hello\",\"messageType\":\"TEXT\"}";
+      try {
+        Message m = new Message(messageString);
+        assertEquals("hello", m.getMessage());
+        assertEquals("TEXT", m.getMessageType());
+        assertNull(m.getAckTag());
+        assertEquals(m.getTags(), new ArrayList<String>());
+      } catch (MalformedMessageException e) {
+        assertNull(e);
+      }
+    }
+
+    @Test(expected = MalformedMessageException.class)
+    public void testConstructorMessageStringMalformedMessage() throws MalformedMessageException {
+        Message m = new Message("{}");
+    }
+    @Test(expected = MalformedMessageException.class)
+    public void testConstructorMessageStringInvalidJSON() throws MalformedMessageException {
+        Message m = new Message("}{");
     }
 
     @Test

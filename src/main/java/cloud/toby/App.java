@@ -99,7 +99,7 @@ class App {
     private static List<String> getBotCommands(String type) {
       switch (type) {
         case "user": return Arrays.asList("(s)end", "(c)reate bot", "(r)emove bot", "(q)uit");
-        case "standard": return Arrays.asList("(s)end", "(f)ollow", "(u)nfollow", "(c)reate socket", "(r)emove socket", "(h)ooks", "(n)o hooks", "(q)uit");
+        case "standard": return Arrays.asList("(s)end", "(f)ollow", "(u)nfollow", "(c)reate socket", "(r)emove socket", "hooks (on)", "hooks (off)", "(q)uit");
         case "socket": return Arrays.asList("(s)end", "(q)uit");
       }
       return null;

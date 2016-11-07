@@ -20,7 +20,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class BotTest {
 
-    private Bot testBot;
+    private Bot testBot1;
+    private Bot testBot2;
     private Message testMessage;
 
     /**
@@ -32,7 +33,7 @@ public class BotTest {
       OnDisconnectCallback onDisconnect = new OnDisconnect();
       OnMessageCallback onMessage = new OnMessage();
 
-      this.testBot = new Bot("exampleId", "exampleSk", onConnect, onDisconnect, onMessage);
+      this.testBot1 = new Bot("exampleId", "exampleSk", onConnect, onDisconnect, onMessage);
       try {
         this.testMessage = new Message("message", "TEXT", "ack", Arrays.asList("tag1", "tag2"));;
       } catch (MalformedMessageException e) {
@@ -43,51 +44,52 @@ public class BotTest {
     @Test
     public void testConstructor() {
         assertNotNull(this.testMessage);
-        assertNotNull(this.testBot);
-        assertFalse(this.testBot.isConnected());
+        assertNotNull(this.testBot1);
+        assertFalse(this.testBot1.isConnected());
     }
 
     // Test Not Connected Exceptions
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedSend() throws NotConnectedException {
-      this.testBot.send(this.testMessage);
+      this.testBot1.send(this.testMessage);
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedFollow() throws NotConnectedException {
-      this.testBot.follow(Arrays.asList("asdf"), "ack");
+      this.testBot1.follow(Arrays.asList("asdf"), "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedUnfollow() throws NotConnectedException {
-      this.testBot.unfollow(Arrays.asList("asdf"), "ack");
+      this.testBot1.unfollow(Arrays.asList("asdf"), "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedInfo() throws NotConnectedException {
-      this.testBot.info("ack");
+      this.testBot1.info("ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedCreateBot() throws NotConnectedException {
-      this.testBot.createBot("username", "password", "ack");
+      this.testBot1.createBot("username", "password", "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedCreateSocket() throws NotConnectedException {
-      this.testBot.createSocket(false, "ack");
+      this.testBot1.createSocket(false, "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedRemoveBot() throws NotConnectedException {
-      this.testBot.removeBot("id", "ack");
+      this.testBot1.removeBot("id", "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedRemoveSocket() throws NotConnectedException {
-      this.testBot.removeSocket("id", "ack");
+      this.testBot1.removeSocket("id", "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedTurnHooksOn() throws NotConnectedException {
-      this.testBot.turnHooksOn("password", "ack");
+      this.testBot1.turnHooksOn("password", "ack");
     }
     @Test(expected = NotConnectedException.class)
     public void testNotConnectedTurnHooksOff() throws NotConnectedException {
-      this.testBot.turnHooksOff("ack");
+      this.testBot1.turnHooksOff("ack");
     }
 
+    // TODO simulate interactions between bots
 
 }

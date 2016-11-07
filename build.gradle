@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'jacoco'
 version = 0.1
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -25,3 +26,25 @@ jar {
     configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
   }
 }
+
+jacoco {
+  toolVersion = "0.7.6.201602180812"
+  reportsDir = file("$buildDir/reports/jacoco")
+}
+
+jacocoTestReport {
+    reports {
+        html {
+            enabled true
+        }
+    }
+
+    afterEvaluate {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/*App**'
+            ])
+        })
+    }
+}
+test.finalizedBy(project.tasks.jacocoTestReport)

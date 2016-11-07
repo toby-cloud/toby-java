@@ -45,30 +45,6 @@ public class Bot {
         this.onMessage = onMessage;
     }
 
-    /**
-     *
-     * @param onConnect
-     */
-    public void setOnConnect(OnConnectCallback onConnect) {
-        this.onConnect = onConnect;
-    }
-
-    /**
-     *
-     * @param onDisconnect
-     */
-    public void setOnDisconnect(OnDisconnectCallback onDisconnect) {
-        this.onDisconnect = onDisconnect;
-    }
-
-    /**
-     *
-     * @param onMessage
-     */
-    public void setOnMessage(OnMessageCallback onMessage) {
-        this.onMessage = onMessage;
-    }
-
     public boolean isConnected() {
       return this.connected;
     }
@@ -132,6 +108,8 @@ public class Bot {
           public void onFailure(Throwable value) {
               System.out.println("MQTT failure");
               connected = false;
+              connection.disconnect(null);
+              System.exit(1);
           }
       });
 
@@ -142,7 +120,7 @@ public class Bot {
           @Override
           public void onSuccess(Void value) {
               // Subscribe to bot messages
-              Topic[] topics = {new Topic("client/" + botId + "/#", QoS.AT_LEAST_ONCE)};
+              Topic[] topics = {new Topic("client/" + botId + "/#", QoS.AT_MOST_ONCE)};
               connection.subscribe(topics, new Callback<byte[]>() {
                   public void onSuccess(byte[] qoses) {
                       connected = true;
@@ -185,7 +163,7 @@ public class Bot {
         throw new NotConnectedException("Bot#send requires MQTT connection");
       }
 
-      this.connection.publish("server/" + botId + "/send", message.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + botId + "/send", message.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
           public void onSuccess(Void v) {
             // the pubish operation completed successfully
           }
