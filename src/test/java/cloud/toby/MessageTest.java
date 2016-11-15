@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.json.JSONObject;
 
 /**
  * Unit test for Message class.
@@ -32,11 +33,13 @@ public class MessageTest  {
      @Test
     public void testConstructorAllFields() {
         List<String> tags = Arrays.asList("tag1", "tag2", "tag3");
+        JSONObject payload = new JSONObject();
+        payload.put("hello", "world");
         try {
-          Message m = new Message("example message", "TEXT", "exampleAck", tags);
-          assertEquals(m.getMessage(), "example message");
-          assertEquals(m.getMessageType(), "TEXT");
-          assertEquals(m.getAckTag(), "exampleAck");
+          Message m = new Message("sender", payload, tags, "exampleAck");
+          assertEquals(m.getFrom(), "sender");
+          assertEquals(m.getPayload(), payload);
+          assertEquals(m.getAck(), "exampleAck");
           assertEquals(m.getTags(), tags);
         } catch (MalformedMessageException e) {
           assertNull(e);
@@ -45,24 +48,7 @@ public class MessageTest  {
 
     @Test(expected = MalformedMessageException.class)
     public void testConstructorAllFieldsMalformed() throws MalformedMessageException {
-        Message m = new Message(null, "TEXT", "exampleAck", Arrays.asList("tag"));
-    }
-
-    /**
-     * Test Message constructor with no ackTag
-     */
-     @Test
-    public void testConstructorNoAckTag() {
-      List<String> tags = Arrays.asList("tag4", "tag5", "tag6");
-      try {
-        Message m = new Message("example message 2", "TEXT", tags);
-        assertEquals(m.getMessage(), "example message 2");
-        assertEquals(m.getMessageType(), "TEXT");
-        assertNull(m.getAckTag());
-        assertEquals(m.getTags(), tags);
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
+        Message m = new Message(null, null, null, null);
     }
 
     /**
@@ -70,62 +56,25 @@ public class MessageTest  {
      */
      @Test
     public void testConstructorMessageStringAllFields() {
-      String messageString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[\"java\"],\"ackTag\": \"javaAck\"}";
+      String messageString = "{\"from\":\"server\",\"payload\":{\"hello\":\"world\", \"hi\":{\"there\":\"guy\"}},\"tags\":[\"java\"],\"ack\": \"javaAck\"}";
+      JSONObject payload = new JSONObject();
+      payload.put("hello", "world");
       try {
         Message m = new Message(messageString);
-        assertEquals(m.getMessage(), "hey");
-        assertEquals(m.getMessageType(), "TEXT");
-        assertEquals(m.getAckTag(), "javaAck");
+        assertEquals(m.getFrom(), "server");
+        assertEquals(m.getPayload().get("hello"), "world");
+        assertEquals(m.getPayload().getJSONObject("hi").get("there"), "guy");
         assertEquals(m.getTags(), Arrays.asList("java"));
+        assertEquals(m.getAck(), "javaAck");
       } catch (MalformedMessageException e) {
         assertNull(e);
       }
 
-    }
-    @Test
-    public void testConstructorMessageStringNoAckTag() {
-      String messageString = "{\"message\":\"hello\",\"messageType\":\"TEXT\",\"tags\":[\"tag\",\"tag2\"]}";
-      try {
-        Message m = new Message(messageString);
-        assertEquals("hello", m.getMessage());
-        assertEquals("TEXT", m.getMessageType());
-        assertNull(m.getAckTag());
-        assertEquals(m.getTags(), Arrays.asList("tag", "tag2"));
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
-
-    }
-    @Test
-    public void testConstructorMessageStringEmptyTags() {
-      String messageString = "{\"message\":\"hello\",\"messageType\":\"TEXT\",\"tags\":[]}";
-      try {
-        Message m = new Message(messageString);
-        assertEquals("hello", m.getMessage());
-        assertEquals("TEXT", m.getMessageType());
-        assertNull(m.getAckTag());
-        assertEquals(m.getTags(), new ArrayList<String>());
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
-    }
-    @Test
-    public void testConstructorMessageStringNullTags() {
-      String messageString = "{\"message\":\"hello\",\"messageType\":\"TEXT\"}";
-      try {
-        Message m = new Message(messageString);
-        assertEquals("hello", m.getMessage());
-        assertEquals("TEXT", m.getMessageType());
-        assertNull(m.getAckTag());
-        assertEquals(m.getTags(), new ArrayList<String>());
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
     }
 
     @Test(expected = MalformedMessageException.class)
     public void testConstructorMessageStringMalformedMessage() throws MalformedMessageException {
-        Message m = new Message("{}");
+        Message m = new Message("{ }");
     }
     @Test(expected = MalformedMessageException.class)
     public void testConstructorMessageStringInvalidJSON() throws MalformedMessageException {
@@ -134,56 +83,8 @@ public class MessageTest  {
 
     @Test
     public void testToStringAllFields() {
-      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"ackTag\":\"javaAck\",\"tags\":[\"java\"]}";
-      try {
-        Message m = new Message("hey", "TEXT", "javaAck", Arrays.asList("java"));
-        Message m2 = new Message(expectedString);
-        assertEquals(expectedString, m.toString());
-        assertEquals(expectedString, m2.toString());
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
+
     }
 
-    @Test
-    public void testToStringNoAckTag() {
-      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[\"java\"]}";
-      try {
-        Message m = new Message("hey", "TEXT", Arrays.asList("java"));
-        Message m2 = new Message(expectedString);
-        assertEquals(expectedString, m.toString());
-        assertEquals(expectedString, m2.toString());
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
-    }
-
-    @Test
-    public void testToStringEmptyTags() {
-      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[]}";
-      try {
-        Message m = new Message("hey", "TEXT", new ArrayList<String>());
-        Message m2 = new Message(expectedString);
-        assertEquals(expectedString, m.toString());
-        assertEquals(expectedString, m2.toString());
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
-    }
-
-    @Test
-    public void testToStringNullTags() {
-      String expectedString = "{\"message\":\"hey\",\"messageType\":\"TEXT\",\"tags\":[]}";
-      try {
-        Message m = new Message("hey", "TEXT", null);
-        Message m2 = new Message(expectedString);
-        assertEquals(expectedString, m.toString());
-        assertEquals(expectedString, m2.toString());
-      } catch (MalformedMessageException e) {
-        assertNull(e);
-      }
-    }
-
-    // TODO test MalformedMessageException
-
+    // TODO
 }

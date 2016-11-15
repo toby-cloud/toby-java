@@ -55,28 +55,16 @@ class App {
      * Called when we receive a message from Toby.
      */
     private static class OnMessage implements OnMessageCallback {
-      public void go(Bot bot, String from, Message message) {
-        System.out.println(String.format("\b\b\b\bMessage received: %s %s", from, message));
+      public void go(Bot bot, Message message) {
+        System.out.println(String.format("\b\b\b\bMessage received: %s", message));
+        if (message.getTags().size() > 0) {
+          switch (message.getTags().get(0)) {
+            case "info": handleInfoResponse(bot, message.getPayload()); break;
+          }
+        }
         System.out.print(">>> ");
       }
 
-      // TODO
-      // this is an ugly, temporary fix to deal with the current server bug
-      public void malformed(Bot bot, String malformed) {
-        System.out.println(String.format("\b\b\b\bMalformed message received: %s", malformed));
-        System.out.print(">>> ");
-
-        JSONObject message = new JSONObject(malformed);
-        JSONArray arr = new JSONArray(message.get("tags").toString());
-        message = new JSONObject(message.get("message").toString());
-        List<String> list = new ArrayList<String>();
-        for(int i = 0; i < arr.length(); i++){
-          list.add(arr.get(i).toString());
-        }
-        switch (list.get(0)) {
-          case "info": handleInfoResponse(bot, message);break;
-        }
-      }
     }
 
     /**
@@ -87,7 +75,7 @@ class App {
      */
     private static void handleInfoResponse(Bot bot, JSONObject payload) {
       // start main menu for the given bot type
-      mainMenu(bot, payload.get("type").toString());
+        mainMenu(bot, payload.getString("type"));
     }
 
     /**
@@ -138,11 +126,15 @@ class App {
                   tags = extractTags(message, "#");
                   ackTags = extractTags(message, "&");
                   messageNoTags = removeTags(removeTags(message, "#"), "&");
-                  if (messageNoTags.length() > 0)
+                  JSONObject payload = new JSONObject();
+                  payload.put("message", messageNoTags);
+
+                  if (messageNoTags.length() > 0) {
                     if (ackTags.size() > 0)
-                      bot.send(new Message(messageNoTags, "TEXT", ackTags.get(0), tags));
+                      bot.send(payload, tags, ackTags.get(0));
                     else
-                      bot.send(new Message(messageNoTags, "TEXT", tags));
+                      bot.send(payload, tags, "");
+                  }
                   break;
                 case "i":
                 case "info":
