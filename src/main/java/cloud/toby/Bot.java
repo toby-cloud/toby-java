@@ -23,8 +23,8 @@ import java.util.List;
  */
 public class Bot {
 
-    private String botId = "";
-    private String botSk = "";
+    private String id = "";
+    private String sk = "";
     private OnConnectCallback onConnect;
     private OnDisconnectCallback onDisconnect;
     private OnMessageCallback onMessage;
@@ -33,39 +33,15 @@ public class Bot {
 
     /**
      * Constructor
-     * @param botId
-     * @param botSk
+     * @param id
+     * @param sk
      * @param onConnect
      */
-    public Bot(String botId, String botSk, OnConnectCallback onConnect, OnDisconnectCallback onDisconnect, OnMessageCallback onMessage) {
-        this.botId = botId;
-        this.botSk = botSk;
+    public Bot(String id, String sk, OnConnectCallback onConnect, OnDisconnectCallback onDisconnect, OnMessageCallback onMessage) {
+        this.id = id;
+        this.sk = sk;
         this.onConnect = onConnect;
         this.onDisconnect = onDisconnect;
-        this.onMessage = onMessage;
-    }
-
-    /**
-     *
-     * @param onConnect
-     */
-    public void setOnConnect(OnConnectCallback onConnect) {
-        this.onConnect = onConnect;
-    }
-
-    /**
-     *
-     * @param onDisconnect
-     */
-    public void setOnDisconnect(OnDisconnectCallback onDisconnect) {
-        this.onDisconnect = onDisconnect;
-    }
-
-    /**
-     *
-     * @param onMessage
-     */
-    public void setOnMessage(OnMessageCallback onMessage) {
         this.onMessage = onMessage;
     }
 
@@ -86,9 +62,9 @@ public class Bot {
       } catch (java.net.URISyntaxException e) {
           e.printStackTrace();
       }
-      mqtt.setClientId(this.botId);
-      mqtt.setUserName(this.botId);
-      mqtt.setPassword(this.botSk);
+      mqtt.setClientId(this.id);
+      mqtt.setUserName(this.id);
+      mqtt.setPassword(this.sk);
 
       // TODO implement connection failed timeout (currently, incorrect credentials will just hang)
 
@@ -102,8 +78,8 @@ public class Bot {
             System.out.println("disconnected");
             bot.connected = false;
             connection.disconnect(null);
-            System.exit(1); // if we don't exit, it will continue to reconnect
-          } // this does nothing
+            System.exit(1); // if we don't exit, it will try to reconnect
+          }
 
           @Override
           public void onPublish(UTF8Buffer t, Buffer b, Runnable ack) {
@@ -115,12 +91,11 @@ public class Bot {
               Thread thread = new Thread() {
                   public void run() {
                       String[] topicSplit = new String(topic.toByteArray()).split("/");
-                      String from = topicSplit[2];
                       try {
                         Message message = new Message(new String(body.toByteArray()));
-                        onMessage.go(bot, from, message);
+                        onMessage.go(bot, message);
                       } catch (MalformedMessageException e) {
-                        onMessage.malformed(bot, new String(body.toByteArray()));
+                        System.out.println("malformed message received");
                       }
                   }
               };
@@ -132,6 +107,8 @@ public class Bot {
           public void onFailure(Throwable value) {
               System.out.println("MQTT failure");
               connected = false;
+              connection.disconnect(null);
+              System.exit(1);
           }
       });
 
@@ -142,7 +119,7 @@ public class Bot {
           @Override
           public void onSuccess(Void value) {
               // Subscribe to bot messages
-              Topic[] topics = {new Topic("client/" + botId + "/#", QoS.AT_LEAST_ONCE)};
+              Topic[] topics = {new Topic("client/" + bot.id, QoS.AT_MOST_ONCE)};
               connection.subscribe(topics, new Callback<byte[]>() {
                   public void onSuccess(byte[] qoses) {
                       connected = true;
@@ -178,14 +155,25 @@ public class Bot {
      *
      * @param  {Message} message the message to be sent to the server
      */
-    public void send(Message message) throws NotConnectedException {
+    public void send(JSONObject payload, List<String> tags, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
         throw new NotConnectedException("Bot#send requires MQTT connection");
       }
 
-      this.connection.publish("server/" + botId + "/send", message.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      // Build request object
+      JSONObject req = new JSONObject();
+      JSONArray t = new JSONArray(tags);
+      try {
+        req.put("payload", payload);
+        req.put("ack", ack);
+        req.put("tags", t);
+      } catch (JSONException e) {
+        e.printStackTrace();
+      }
+
+      this.connection.publish("server/" + this.id + "/send", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
           public void onSuccess(Void v) {
             // the pubish operation completed successfully
           }
@@ -199,9 +187,9 @@ public class Bot {
      * follow - subscribe to tags
      *
      * @param  {List<String>} tags the list of tags to follow
-     * @param  {type} String AckTag the tag to respond to
+     * @param  {type} String ack the tag to respond to
      */
-    public void follow(List<String> tags, String ackTag) throws NotConnectedException {
+    public void follow(List<String> tags, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -212,14 +200,14 @@ public class Bot {
       JSONObject req = new JSONObject();
       JSONArray t = new JSONArray(tags);
         try {
-            req.put("ackTag", ackTag);
+            req.put("ack", ack);
             req.put("tags", t);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
 
-      this.connection.publish("server/" + botId + "/follow", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/follow", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -233,9 +221,9 @@ public class Bot {
      * unfollow - unsubscribe from tags
      *
      * @param  {List<String>} tags the list of tags to unfollow
-     * @param  {String} AckTag the tag to respond to
+     * @param  {String} ack the tag to respond to
      */
-    public void unfollow(List<String> tags, String ackTag) throws NotConnectedException {
+    public void unfollow(List<String> tags, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -246,14 +234,14 @@ public class Bot {
       JSONObject req = new JSONObject();
       JSONArray t = new JSONArray(tags);
         try {
-            req.put("ackTag", ackTag);
+            req.put("ack", ack);
             req.put("tags", t);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
 
-      this.connection.publish("server/" + botId + "/unfollow", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/unfollow", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -266,9 +254,9 @@ public class Bot {
     /**
      * info - get bot information
      *
-     * @param  {type} String AckTag the tag to respond to
+     * @param  {type} String ack the tag to respond to
      */
-    public void info(String ackTag) throws NotConnectedException {
+    public void info(String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -278,12 +266,12 @@ public class Bot {
       // Build request object
       JSONObject req = new JSONObject();
         try {
-            req.put("ackTag", ackTag);
+            req.put("ack", ack);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-      this.connection.publish("server/" + botId + "/info", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/info", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -298,9 +286,9 @@ public class Bot {
      *
      * @param  {String} username description
      * @param  {String} password description
-     * @param  {String} ackTag   description
+     * @param  {String} ack   description
      */
-    public void createBot(String username, String password, String ackTag) throws NotConnectedException {
+    public void createBot(String username, String password, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -310,14 +298,14 @@ public class Bot {
       JSONObject req = new JSONObject();
         try {
             req.put("id", username);
-            req.put("secret", password);
-            req.put("ackTag", ackTag);
+            req.put("sk", password);
+            req.put("ack", ack);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
 
-      this.connection.publish("server/" + botId + "/create-bot", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/create-bot", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -332,9 +320,9 @@ public class Bot {
      * createSocket - create a new socket (bots only)
      *
      * @param  {boolean} persist if false, socket will be automatically removed on first disconnect
-     * @param  {String}ackTag  the tag to respond to
+     * @param  {String}ack  the tag to respond to
      */
-    public void createSocket(boolean persist, String ackTag) throws NotConnectedException {
+    public void createSocket(boolean persist, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -345,13 +333,13 @@ public class Bot {
       JSONObject req = new JSONObject();
         try {
             req.put("persist", persist);
-            req.put("ackTag", ackTag);
+            req.put("ack", ack);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
 
-      this.connection.publish("server/" + botId + "/create-socket", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/create-socket", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -365,9 +353,9 @@ public class Bot {
      * removeBot - remove a bot (users only)
      *
      * @param  {String}targetId  the ID of the bot to delete
-     * @param  {String}ackTag the tag to respond to
+     * @param  {String}ack the tag to respond to
      */
-    public void removeBot(String targetId, String ackTag) throws NotConnectedException {
+    public void removeBot(String targetId, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -376,14 +364,14 @@ public class Bot {
       // Build request object
       JSONObject req = new JSONObject();
         try {
-            req.put("targetId", targetId);
-            req.put("ackTag", ackTag);
+            req.put("id", targetId);
+            req.put("ack", ack);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
 
-      this.connection.publish("server/" + botId + "/remove-bot", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/remove-bot", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -397,9 +385,9 @@ public class Bot {
      * removeSocket - remove a socket (bots only)
      *
      * @param  {String} socketId  the ID of the socket to delete
-     * @param  {String} ackTag the tag to respond to
+     * @param  {String} ack the tag to respond to
      */
-    public void removeSocket(String targetId, String ackTag) throws NotConnectedException {
+    public void removeSocket(String targetId, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -408,14 +396,14 @@ public class Bot {
       // Build request object
       JSONObject req = new JSONObject();
         try {
-            req.put("targetId", targetId);
-            req.put("ackTag", ackTag);
+            req.put("id", targetId);
+            req.put("ack", ack);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
 
-      this.connection.publish("server/" + botId + "/remove-socket", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/remove-socket", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -429,9 +417,9 @@ public class Bot {
      * turnHooksOn - turn bot hooks on (bots only)
      *
      * @param  {String} password the hook password
-     * @param  {String} ackTag   the tag to respond to
+     * @param  {String} ack   the tag to respond to
      */
-    public void turnHooksOn(String password, String ackTag) throws NotConnectedException {
+    public void turnHooksOn(String password, String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -441,14 +429,14 @@ public class Bot {
       // Build request object
       JSONObject req = new JSONObject();
         try {
-            req.put("hookSecret", password);
-            req.put("ackTag", ackTag);
+            req.put("sk", password);
+            req.put("ack", ack);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
 
-      this.connection.publish("server/" + botId + "/hooks-on", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/hooks-on", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
@@ -461,9 +449,9 @@ public class Bot {
     /**
      * turnHooksOff - turn bot hooks off (bots only)
      *
-     * @param  {String} ackTag   the tag to respond to
+     * @param  {String} ack   the tag to respond to
      */
-    public void turnHooksOff(String ackTag) throws NotConnectedException {
+    public void turnHooksOff(String ack) throws NotConnectedException {
       final Bot bot = this;
 
       if (!this.isConnected()) {
@@ -473,12 +461,12 @@ public class Bot {
       // Build request object
       JSONObject req = new JSONObject();
         try {
-            req.put("ackTag", ackTag);
+            req.put("ack", ack);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-      this.connection.publish("server/" + botId + "/hooks-off", req.toString().getBytes(), QoS.AT_LEAST_ONCE, false, new Callback<Void>() {
+      this.connection.publish("server/" + this.id + "/hooks-off", req.toString().getBytes(), QoS.AT_MOST_ONCE, false, new Callback<Void>() {
         public void onSuccess(Void v) {
           // the pubish operation completed successfully
         }
