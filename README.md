@@ -64,7 +64,7 @@ private class OnConnect implements OnConnectCallback {
 }
 
 private class OnDisconnect implements OnDisconnectCallback {
-  public void go(Bot bot) {
+  public void go() {
     System.out.println("Disconnected!");
   }
 }
@@ -86,4 +86,10 @@ Once the callbacks are defined, you can connect to Toby as follows:
 
   Bot bot = new Bot(id, sk, new OnConnect(), new OnDisconnect(), new OnMessage());
   bot.start();  
+```
+
+## Send
+
+```java
+
 ```
