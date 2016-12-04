@@ -43,3 +43,53 @@ You can run unit tests with the command `gradle check`.
 
 - [fusesource/mqtt-client](https://github.com/fusesource/mqtt-client)
 - [google/gson](https://github.com/google/gson)
+
+
+# Documentation
+
+## Connecting to Toby
+
+### Defining callbacks
+
+Before connecting to Toby, you must provide three callbacks for your bot:
+- OnConnect: called when bot successfully establishes connection with the server.
+- OnDisconnect: called when bot disconnects from the server.
+- OnMessage: called when the bot receives a message.
+
+```java
+private class OnConnect implements OnConnectCallback {
+  public void go(Bot bot) {
+    System.out.println("Connected!");
+  }
+}
+
+private class OnDisconnect implements OnDisconnectCallback {
+  public void go() {
+    System.out.println("Disconnected!");
+  }
+}
+
+private class OnMessage implements OnMessageCallback {
+  public void go(Bot bot, Message m) {
+    System.out.println("Message received: " + m.toString());
+  }
+}
+```
+
+### Start bot
+
+Once the callbacks are defined, you can connect to Toby as follows:
+
+```java
+  String id = "{{ botId }}"; // your bot ID from toby.cloud
+  String sk = "{{ botSk }}"; // your bot secret from toby.cloud
+
+  Bot bot = new Bot(id, sk, new OnConnect(), new OnDisconnect(), new OnMessage());
+  bot.start();  
+```
+
+## Send
+
+```java
+
+```
