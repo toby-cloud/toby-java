@@ -7,8 +7,8 @@ toby-java uses Gradle. The jars *are not* yet available from a public repo, but 
 To compile it yourself:
 
 ```bash
-git clone https://github.com/toby-cloud/toby-node
-cd toby-node
+git clone https://github.com/toby-cloud/toby-java
+cd toby-java
 # see usage below
 ```
 
@@ -88,8 +88,85 @@ Once the callbacks are defined, you can connect to Toby as follows:
   bot.start();  
 ```
 
-## Send
+### Send
+
+To send a message, provide a JSON payload, a list of tags, and an ack tag.
 
 ```java
+JSONObject payload = new JSONObject();
+payload.put("message", "hello world!");
 
+bot.send(payload, Arrays.asList("hello"), "sent");
+```
+
+### Information
+
+Get information about the bot.
+
+```java
+bot.info("bot_info"); // ack
+```
+
+### Follow
+
+Subscribe to tags (standard bots only).
+
+```java
+bot.follow(Arrays.asList("hello"), "followed"); // tags, ack
+```
+
+### Unfollow
+
+Unsubscribe to tags (standard bots only).
+
+```java
+bot.unfollow(Arrays.asList("hello"), "unfollowed"); // tags, ack
+```
+
+### Create Bot
+
+Create a standard bot (users only).
+
+```java
+bot.createBot("id", "sk", "created"); // botId, botSk, ack
+```
+
+### Create Socket
+
+Create a socket bot (standard bots only).
+
+```java
+bot.createBot(true, "created"); // persist, ack
+```
+
+### Remove Bot
+
+Remove a standard bot (users only).
+
+```java
+bot.removeBot("targetId", "removed"); // bot ID, ack
+```
+
+### Remove Socket
+
+Remove a socket bot (standard bots only).
+
+```java
+bot.removeSocket("targetId", "removed"); // socket ID, ack
+```
+
+### Turn Hooks On
+
+Enable web hooks (standard bots only);
+
+```java
+bot.turnHooksOn("hookSk", "hooks_on"); // hook password, ack
+```
+
+### Turn Hooks Off
+
+Disable web hooks (standard bots only);
+
+```java
+bot.turnHooksOn("hookSk", "hooks_on"); // hook password, ack
 ```
