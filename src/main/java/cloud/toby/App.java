@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
 
 import java.util.regex.Matcher;
@@ -36,7 +37,7 @@ class App {
     public static final String ANSI_BLUE = "\u001B[34m";
     public static final String ANSI_PURPLE = "\u001B[35m";
     public static final String ANSI_CYAN = "\u001B[36m";
-    public static final String ANSI_WHITE = "\u001B[37m";
+    public static final String ANSI_GRAY = "\u001B[37m";
 
     private static List<String> hidden = new ArrayList<>();
     private static boolean isConnected;
@@ -84,7 +85,7 @@ class App {
             } else if (message.getTags().size() > 0 && message.getTags().get(0).equals("info")) {
                 handleInfoResponse(bot, message.getPayload());
             } else if (message.getPayload().has("status")) {
-                System.out.print("\b\b\b\b");
+                System.out.print("\b\b\b\b\b\b\b\b");
                 if (message.getPayload().getInt("status") == 200) {
                     System.out.println("success");
                 } else {
@@ -95,9 +96,12 @@ class App {
                 JSONObject payload = message.getPayload();
                 String m = payload.toString();
                 if (payload.has("message")) {
-                    m = (String) payload.get("message"); // cast instead of toString to handle non string case
+                    m = payload.getString("message"); // cast instead of toString to handle non string case
                 }
-                printToConsole(String.format(ANSI_CYAN + "@%s: " + ANSI_RESET + "%s", message.getFrom(), m));
+
+                Date date = new Date();
+                SimpleDateFormat d = new SimpleDateFormat("HH:mm:ss");
+                printToConsole(String.format(ANSI_GRAY + d.format(date) + ANSI_RESET +  ANSI_CYAN + " @%s: " + ANSI_RESET + "%s", message.getFrom(), m));
 
             }
         }
@@ -117,7 +121,7 @@ class App {
      * @param color the color to print the text in
      */
     private static void printToConsole(String text, String color) {
-        String s = String.format("\b\b\b\b%s\n", text);
+        String s = String.format("\b\b\b\b\b\b\b%s\n", text);
         if (color != null)
             s = color + s + ANSI_RESET;
         System.out.print(s);
@@ -169,7 +173,7 @@ class App {
 
     private static String divide(String before, String after) {
         String r = before;
-        for (int i=0; i<80; i++) r+="-";
+        for (int i=0; i<50; i++) r+="-";
         return r + after;
     }
 
@@ -331,6 +335,10 @@ class App {
                     case "unhide":
                         hidden = new ArrayList<>();
                         break;
+                    case "t":
+                    case "time":
+                        printToConsole(getDateDiff(connectTime, new Date(), TimeUnit.SECONDS) + " seconds", ANSI_GREEN);
+                        break;
                     case "cl":
                     case "clear":
                       clear(); break;
@@ -372,7 +380,6 @@ class App {
         System.out.print("\033[H\033[2J");
         System.out.flush();
         if (banner) System.out.println(ANSI_RED + " ▄▀▀▀█▀▀▄  ▄▀▀▀▀▄   ▄▀▀█▄▄   ▄▀▀▄ ▀▀▄\n█    █  ▐ █      █ ▐ ▄▀   █ █   ▀▄ ▄▀\n▐   █     █      █   █▄▄▄▀  ▐     █\n   █      ▀▄    ▄▀   █   █        █\n ▄▀         ▀▀▀▀    ▄▀▄▄▄▀      ▄▀\n█                  █    ▐       █\n▐                  ▐            ▐\n" + ANSI_RESET);
-        if (banner && isConnected) System.out.println("Connection duration: " + getDateDiff(connectTime, new Date(), TimeUnit.SECONDS) + " seconds");
     }
 
     private static void clear() {
@@ -427,12 +434,11 @@ class App {
 
         clear(); // clear console
 
-        Date startTime = new Date();
         Bot bot = new Bot(username, password, new OnConnect(), new OnDisconnect(), new OnMessage());
         bot.start();
-
-        while (!bot.isConnected()) {}
 
         while(bot.isConnected()) {}
     }
 }
+
+
