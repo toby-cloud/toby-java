@@ -88,7 +88,7 @@ Once the callbacks are defined, you can connect to Toby as follows:
   bot.start();  
 ```
 
-## Send
+### Send
 
 To send a message, provide a JSON payload, a list of tags, and an ack tag.
 
@@ -99,7 +99,7 @@ payload.put("message", "hello world!");
 bot.send(payload, Arrays.asList("hello"), "sent");
 ```
 
-## Information
+### Information
 
 Get information about the bot.
 
@@ -107,7 +107,7 @@ Get information about the bot.
 bot.info("bot_info"); // ack
 ```
 
-## Follow
+### Follow
 
 Subscribe to tags (standard bots only).
 
@@ -115,7 +115,7 @@ Subscribe to tags (standard bots only).
 bot.follow(Arrays.asList("hello"), "followed"); // tags, ack
 ```
 
-## Unfollow
+### Unfollow
 
 Unsubscribe to tags (standard bots only).
 
@@ -123,7 +123,7 @@ Unsubscribe to tags (standard bots only).
 bot.unfollow(Arrays.asList("hello"), "unfollowed"); // tags, ack
 ```
 
-## Create Bot
+### Create Bot
 
 Create a standard bot (users only).
 
@@ -131,7 +131,7 @@ Create a standard bot (users only).
 bot.createBot("id", "sk", "created"); // botId, botSk, ack
 ```
 
-## Create Socket
+### Create Socket
 
 Create a socket bot (standard bots only).
 
@@ -139,7 +139,7 @@ Create a socket bot (standard bots only).
 bot.createBot(true, "created"); // persist, ack
 ```
 
-## Remove Bot
+### Remove Bot
 
 Remove a standard bot (users only).
 
@@ -147,10 +147,26 @@ Remove a standard bot (users only).
 bot.removeBot("targetId", "removed"); // bot ID, ack
 ```
 
-## Remove Socket
+### Remove Socket
 
 Remove a socket bot (standard bots only).
 
 ```java
 bot.removeSocket("targetId", "removed"); // socket ID, ack
+```
+
+### Turn Hooks On
+
+Enable web hooks (standard bots only);
+
+```java
+bot.turnHooksOn("hookSk", "hooks_on"); // hook password, ack
+```
+
+### Turn Hooks Off
+
+Disable web hooks (standard bots only);
+
+```java
+bot.turnHooksOn("hookSk", "hooks_on"); // hook password, ack
 ```
