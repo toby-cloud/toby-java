@@ -47,6 +47,30 @@ public class Bot {
         this.onMessage = onMessage;
     }
 
+    /**
+     * Set the on connect callback.
+     * @param onConnect
+     */
+    public void setOnConnectCallback(OnConnectCallback onConnect) {
+        this.onConnect = onConnect;
+    }
+
+    /**
+     * Set the on connect callback.
+     * @param onConnect
+     */
+    public void setOnDisconnectCallback(OnDisconnectCallback onDisconnect) {
+        this.onDisconnect = onDisconnect;
+    }
+
+    /**
+     * Set the on connect callback.
+     * @param onConnect
+     */
+    public void setOnMessageCallback(OnMessageCallback onMessage) {
+        this.onMessage = onMessage;
+    }
+
     public boolean isConnected() {
       return this.connected;
     }
