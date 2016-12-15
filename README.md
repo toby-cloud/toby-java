@@ -117,7 +117,7 @@ bot.follow(Arrays.asList("hello"), "followed"); // tags, ack
 
 ### Unfollow
 
-Unsubscribe to tags (standard bots only).
+Unsubscribe from tags (standard bots only).
 
 ```java
 bot.unfollow(Arrays.asList("hello"), "unfollowed"); // tags, ack
@@ -136,7 +136,7 @@ bot.createBot("id", "sk", "created"); // botId, botSk, ack
 Create a socket bot (standard bots only).
 
 ```java
-bot.createBot(true, "created"); // persist, ack
+bot.createSocket(true, "created"); // persist, ack
 ```
 
 ### Remove Bot
